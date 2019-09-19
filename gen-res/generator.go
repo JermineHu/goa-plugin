@@ -11,7 +11,7 @@ import (
 )
 
 const (
-resAt=`
+	resAt = `
 package {{.PkgName}}
 
 type (
@@ -44,7 +44,7 @@ func SetResActions()  {
 	resActions{{$v.Name}}.ResDes="{{$v.Description}}"{{$metaR:=index $v.Metadata "module"}}{{ if $metaR}}
     resActions{{$v.Name}}.ModuleName="{{  index $metaR 0 }}"{{end}}{{range $v.Actions}}{{$name:=replace .Name "-" ""  }}
 	{{$v.Name}}Action{{$name}}:=Action{}
-	{{$v.Name}}Action{{$name}}.ActDes="{{.Description}}"{{$metaA:=index .Metadata "action"}}{{ if $metaA}}
+	{{$v.Name}}Action{{$name}}.ActDes="{{.Description}}"{{$metaA:=index .Metadata "operation"}}{{ if $metaA}}
 	{{$v.Name}}Action{{$name}}.ActMeta="{{index $metaA 0}}"{{end}}
 	{{$v.Name}}Action{{$name}}.ActName="{{.Name}}"
 	{{$v.Name}}Action{{$name}}.ActPath="{{(index .Routes 0 ).Path}}"
@@ -75,10 +75,7 @@ func Generate() ([]string, error) {
 	return WriteNames(design.Design, outDir)
 }
 
-type DData struct {
-	Data map[string]*design.ResourceDefinition
-	PkgName string
-}
+
 
 // WriteNames creates the names.txt file.
 func WriteNames(api *design.APIDefinition, outDir string) ([]string, error) {
@@ -96,7 +93,7 @@ func WriteNames(api *design.APIDefinition, outDir string) ([]string, error) {
 	//	return nil
 	//})
 
-//	res:=[]string{}
+	//	res:=[]string{}
 	//for k,v:=range api.Resources {
 	//
 	//	fmt.Println("----the resource---%v-->",k)
@@ -123,23 +120,26 @@ func WriteNames(api *design.APIDefinition, outDir string) ([]string, error) {
 	//		}
 	//	}
 	//}
-
-	data:=DData{}
-	data.Data=api.Resources
-	data.PkgName=outDir[strings.LastIndex(outDir,"/")+1:]
+	type Data struct {
+		Data    map[string]*design.ResourceDefinition
+		PkgName string
+	}
+	data := Data{}
+	data.Data = api.Resources
+	data.PkgName = outDir[strings.LastIndex(outDir, "/")+1:]
 
 	outputFile := filepath.Join(outDir, "res_actions.go")
 	f, err := os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
-	funcMap:=template.FuncMap{}
-	funcMap["replace"]= func(s,old,new string) string {
-		return strings.ReplaceAll(s,old,new)
+	funcMap := template.FuncMap{}
+	funcMap["replace"] = func(s, old, new string) string {
+		return strings.ReplaceAll(s, old, new)
 	}
 	funcMap["goify"]=codegen.Goify
 	//tstr:=strings.ReplaceAll(resAt,"\n","")
-	t:=template.Must(template.New("res").Funcs(funcMap).Parse(resAt))
-	t.Execute(f,data)
+	t := template.Must(template.New("res").Funcs(funcMap).Parse(resAt))
+	t.Execute(f, data)
 	return []string{outputFile}, nil
 }
