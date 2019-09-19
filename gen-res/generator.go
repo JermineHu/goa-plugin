@@ -40,7 +40,7 @@ func init()  {
 func SetResActions()  {
 	resActionsMap=map[string]ResActions{}{{range $k,$v:=.Data}}
     resActions{{$v.Name}}:=ResActions{}
-	resActions{{$v.Name}}.ResName="{{$v.Name}}"
+	resActions{{$v.Name}}.ResName="{{goify $v.Name true }}Controller"
 	resActions{{$v.Name}}.ResDes="{{$v.Description}}"{{$metaR:=index $v.Metadata "module"}}{{ if $metaR}}
     resActions{{$v.Name}}.ModuleName="{{  index $metaR 0 }}"{{end}}{{range $v.Actions}}{{$name:=replace .Name "-" ""  }}
 	{{$v.Name}}Action{{$name}}:=Action{}
@@ -137,6 +137,7 @@ func WriteNames(api *design.APIDefinition, outDir string) ([]string, error) {
 	funcMap["replace"]= func(s,old,new string) string {
 		return strings.ReplaceAll(s,old,new)
 	}
+	funcMap["goify"]=codegen.Goify
 	//tstr:=strings.ReplaceAll(resAt,"\n","")
 	t:=template.Must(template.New("res").Funcs(funcMap).Parse(resAt))
 	t.Execute(f,data)
